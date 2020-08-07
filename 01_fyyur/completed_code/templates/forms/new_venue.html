@@ -26,7 +26,11 @@
       <div class="form-group">
           <label for="phone">Phone</label>
           {{ form.phone(class_ = 'form-control', placeholder='xxx-xxx-xxxx', autofocus = true) }}
-        </div>
+      </div>
+      <div class="form-group">
+          <label for="genres">Website</label>
+          {{ form.website(class_ = 'form-control', placeholder='https://', autofocus = true) }}
+      </div>
       <div class="form-group">
         <label for="genres">Genres</label>
         <small>Ctrl+Click to select multiple</small>
@@ -41,8 +45,8 @@
           {{ form.image_link(class_ = 'form-control', placeholder='https://', autofocus = true) }}
       </div>
       <div class="form-group">
-          <label for="seeking-venue">Seeking Talent</label>
-          {{ form.seeking_talent(class_ = 'form-control', placeholder='Yes', autofocus = true) }}
+          <label for="seeking-talent">Seeking Talent?</label>
+          {{ form.seeking_talent(class_ = 'form-check-input') }}
       </div>
       <div class="form-group">
           <label for="seeking_description">What type of talent are you seeking?</label>

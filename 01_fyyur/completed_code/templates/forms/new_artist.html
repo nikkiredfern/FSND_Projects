@@ -33,12 +33,16 @@
           {{ form.website(class_ = 'form-control', placeholder='https://', autofocus = true) }}
       </div>
       <div class="form-group">
+          <label for="genres">Image Link</label>
+          {{ form.image_link(class_ = 'form-control', placeholder='https://', autofocus = true) }}
+      </div>
+      <div class="form-group">
           <label for="facebook-link">Facebook Link</label>
           {{ form.facebook_link(class_ = 'form-control', placeholder='https://', autofocus = true) }}
       </div>
       <div class="form-group">
-          <label for="seeking-venue">Seeking Venue</label>
-          {{ form.seeking_venue(class_ = 'form-control', placeholder='Yes', autofocus = true) }}
+          <label for="seeking_venue">Seeking Venue?</label>
+          {{ form.seeking_venue(class_ = 'form-check-input') }}
       </div>
       <div class="form-group">
           <label for="seeking_description">What type of venues are you seeking?</label>
