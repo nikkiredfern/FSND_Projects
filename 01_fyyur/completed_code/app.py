@@ -43,7 +43,7 @@ class Venue(db.Model):
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
-    genres = db.Column(db.ARRAY(db.String))
+    genres = db.Column(db.String)
     website = db.Column(db.String(500))
     facebook_link = db.Column(db.String(500))
     seeking_talent = db.Column(db.String)
@@ -63,7 +63,7 @@ class Artist(db.Model):
     phone = db.Column(db.String(120))
     website = db.Column(db.String(500))
     image_link = db.Column(db.String(500))
-    genres = db.Column(db.ARRAY(db.String))
+    genres = db.Column(db.String)
     facebook_link = db.Column(db.String(120))
     seeking_venue = db.Column(db.String())
     seeking_description = db.Column(db.String(1000))
@@ -160,24 +160,25 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   venue = Venue.query.get(venue_id)
-  #data = [{
-    #'name': venue.name,
-    #'city': venue.city,
-    #'state': venue.state,
-    #'address': venue.address,
-    #'phone': venue.phone,
-    #'website': venue.website,
-    #'image_link': venue.image_link,
-    #'genres': genres,
-    #'facebook_link': venue.facebook_link,
-    #'seeking_venue': venue.seeking_talent,
-    #'seeking_description': venue.seeking_talent_description
-  #}]
+  genres = venue.genres.split(",")
 
+  data = {
+  'id': venue.id,
+  'name': venue.name,
+  'address': venue.address,
+  'genres': [item.replace('{', '').replace('}', '') for item in genres],
+  'city': venue.city,
+  'state': venue.state,
+  'phone': venue.phone,
+  'website': venue.website,
+  'facebook_link': venue.facebook_link,
+  'seeking_talent': venue.seeking_talent,
+  'image_link': venue.image_link,
+}
   past_shows = db.session.query(Show.artist_id, Show.start_time).filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
   upcoming_shows = db.session.query(Venue).join(Show, Show.venue_id == venue.id).filter(Show.start_time>datetime.utcnow())
+  return render_template('pages/show_venue.html', venue=data)
 
-  return render_template('pages/show_venue.html', venue=venue)
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -202,6 +203,8 @@ def create_venue_submission():
         facebook_link = request.form['facebook_link']
         if 'seeking_talent' not in request.form:
             seeking_talent = False
+        else:
+            seeking_talent = request.form['seeking_talent']
         seeking_talent_description = request.form['seeking_talent_description']
         # TODO: modify data to be the data object returned from db insertion
         venue = Venue(name=name,
@@ -237,7 +240,7 @@ def delete_venue(venue_id):
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
   error = False
   try:
-      venue = Venue.query.get(venue_id)
+      venue = Venue.query.filter_by(id=venue_id).first_or_404()
       db.session.delete(venue)
       db.session.commit()
   except():
@@ -283,29 +286,34 @@ def show_artist(artist_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   artist = Artist.query.get(artist_id)
+  genres = artist.genres.split(',')
+
+  data = {
+    'id': artist.id,
+    'name': artist.name,
+    'genres': [item.replace('{', '').replace('}', '') for item in genres],
+    'city': artist.city,
+    'state': artist.state,
+    'phone': artist.phone,
+    'website': artist.website,
+    'facebook_link': artist.facebook_link,
+    'seeking_venue': artist.seeking_venue,
+    'seeking_description': artist.seeking_description,
+    'image_link': artist.image_link,
+  }
+
   past_shows = db.session.query(Show.venue_id, Show.start_time).filter(Show.artist_id == artist.id, Show.start_time < datetime.now()).all()
   upcoming_shows = db.session.query(Show.venue_id, Show.start_time).filter(Show.artist_id == artist.id, Show.start_time >= datetime.now()).all()
 
-  return render_template('pages/show_artist.html', artist=artist)
+  return render_template('pages/show_artist.html', artist=data)
 
 #  Update
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
+  artist = Artist.query.get(artist_id)
   form = ArtistForm()
-  artist={
-    "id": 4,
-    "name": "Guns N Petals",
-    "genres": ["Rock n Roll"],
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "326-123-5000",
-    "website": "https://www.gunsnpetalsband.com",
-    "facebook_link": "https://www.facebook.com/GunsNPetals",
-    "seeking_venue": True,
-    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-    "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-  }
+  print(form.name.data)
   # TODO: populate form with fields from artist with ID <artist_id>
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
@@ -318,21 +326,9 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-  form = VenueForm()
-  venue={
-    "id": 1,
-    "name": "The Musical Hop",
-    "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
-    "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-  }
+  venue = Venue.query.get(venue_id)
+  form = VenueForm(obj=venue)
+  print(form.name.data)
   # TODO: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
@@ -363,10 +359,12 @@ def create_artist_submission():
         phone = request.form['phone']
         website = request.form['website']
         image_link = request.form['image_link']
-        genres = request.form['genres']
+        genres = request.form.getlist('genres')
         facebook_link = request.form['facebook_link']
         if 'seeking_venue' not in request.form:
             seeking_venue = False
+        else:
+            seeking_venue = request.form['seeking_venue']
         seeking_description = request.form['seeking_description']
         # TODO: modify data to be the data object returned from db insertion
         artist = Artist(name=name,

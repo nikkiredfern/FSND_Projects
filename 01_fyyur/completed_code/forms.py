@@ -33,19 +33,6 @@ class ShowForm(Form):
     )
 
 class VenueForm(Form):
-
-    #def invalid_phone(form, field):
-        #if len(field) > 16:
-            #raise ValidationError('Invalid phone number.')
-        #try:
-            #input_number = phonenumbers.parse(field)
-            #if not (phonenumbers.is_valid_number(input_number)):
-                #raise ValidationError('Invalid phone number.')
-        #except:
-            #input_number = phonenumbers.parse("+1"+field)
-            #if not (phonenumbers.is_valid_number(input_number)):
-                #raise ValidationError('Invalid phone number.')
-
     name = StringField(
         'name', validators=[DataRequired()]
     )
@@ -111,13 +98,6 @@ class VenueForm(Form):
     address = StringField(
         'address', validators=[DataRequired()]
     )
-    phone = StringField(
-        'phone', validators=[DataRequired(),
-                            Length(min=10, max=10),
-                            Regexp('[0-9]{10}'),
-                            #invalid_phone('VenueForm', 'phone')
-                            ]
-    )
     website = StringField(
         'website', validators=[URL()]
     )
@@ -159,8 +139,17 @@ class VenueForm(Form):
         'seeking_description'
     )
 
+    #def validate_phone(field):
+        #if len(field.data) != 10:
+            #raise ValidationError('Please enter a valid phone number.')
+        #try:
+            #input_number = phonenumbers.parse(field.data)
+            #if not (phonenumbers.is_valid_number(input_number)):
 
-
+    phone = StringField(
+        'phone', validators=[DataRequired()]
+        #validate_phone]
+    )
 
 class ArtistForm(Form):
     name = StringField(
