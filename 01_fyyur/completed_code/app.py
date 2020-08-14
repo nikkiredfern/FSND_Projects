@@ -74,7 +74,7 @@ class Artist(db.Model):
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration. - COMPLETED
 
 class Show(db.Model):
-    __tablename__ = 'Shows'
+    __tablename__ = 'Show'
 
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
@@ -173,8 +173,9 @@ def show_venue(venue_id):
     #'seeking_venue': venue.seeking_talent,
     #'seeking_description': venue.seeking_talent_description
   #}]
+
   past_shows = db.session.query(Show.artist_id, Show.start_time).filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
-  upcoming_shows = db.session.query(Show.artist_id, Show.start_time).filter(Show.venue_id == venue.id, Show.start_time >= datetime.now()).all()
+  upcoming_shows = db.session.query(Venue).join(Show, Show.venue_id == venue.id).filter(Show.start_time>datetime.utcnow())
 
   return render_template('pages/show_venue.html', venue=venue)
 
@@ -407,20 +408,36 @@ def shows():
   # displays list of shows at /shows
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data = []
-  shows = Shows.query.order_by(Shows.start_time.desc).all()
-  for show in shows:
-      venue = Venue.query.fliter_by(id=show.venue_id)
-      artist = Artist.query.filter_by(id=show.artist_id)
-      data = ([{
-      "venue_id": venue.id,
-      "venue_name": venue.name,
-      "artist_id": artist.id,
-      "artist_name": artist.name,
-      "artist_image_link": artist.image_link,
-      "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M")
-      }])
-  return render_template('pages/shows.html', shows=data)
+    data = []
+    shows = Show.query.order_by(Show.start_time.desc()).all()
+    for show in shows:
+        venue = Venue.query.filter_by(id=show.venue_id).first_or_404()
+        artist = Artist.query.filter_by(id=show.artist_id).first_or_404()
+        data.extend([{
+            "venue_id": venue.id,
+            "venue_name": venue.name,
+            "artist_id": artist.id,
+            "artist_name": artist.name,
+            "artist_image_link": artist.image_link,
+            "start_time": show.start_time.strftime("%m/%d/%Y, %H:%M")
+        }])
+    return render_template('pages/shows.html', shows=data)
+
+  #data = []
+  #order_by(Show.start_time.desc)
+  #shows = Show.query.order_by(Show.start_time.desc()).all()
+  #for show in shows:
+      #venue = Venue.query.filter_by(id=shows.venue_id).all()
+      #artist = Artist.query.filter_by(id=shows.artist_id).all()
+      #data = ([{
+      #"venue_id": venue.id,
+      #"venue_name": venue.name,
+      #"artist_id": artist.id,
+      #"artist_name": artist.name,
+      #"artist_image_link": artist.image_link,
+      #"start_time": show.start_time.strftime("%m/%d/%Y, %H:%M")
+      #}])
+
 
 @app.route('/shows/create')
 def create_shows():
@@ -451,7 +468,7 @@ def create_show_submission():
         db.session.rollback()
         error = True
         #on unsuccessful db insert, flash an error instead.
-        flash('An error occurred. Show could not be listed.')
+        flash('An error occurred. The show could not be listed.')
         print(sys.exe_info())
     finally:
         db.session.close()
