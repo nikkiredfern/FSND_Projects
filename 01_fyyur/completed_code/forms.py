@@ -1,13 +1,29 @@
-from datetime import datetime
+
 from flask_wtf import Form
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField, IntegerField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms import (StringField,
+                     SelectField,
+                     SelectMultipleField,
+                     DateTimeField,
+                     BooleanField,
+                     IntegerField)
+from wtforms.validators import (DataRequired,
+                                AnyOf,
+                                URL,
+                                Email,
+                                EqualTo,
+                                Email,
+                                Length,
+                                NumberRange,
+                                ValidationError,
+                                Regexp)
+from datetime import datetime
+import phonenumbers
 
 class ShowForm(Form):
-    artist_id = StringField(
+    artist_id = IntegerField(
         'artist_id', validators=[DataRequired()]
     )
-    venue_id = StringField(
+    venue_id = IntegerField(
         'venue_id', validators=[DataRequired()]
     )
     start_time = DateTimeField(
@@ -17,6 +33,19 @@ class ShowForm(Form):
     )
 
 class VenueForm(Form):
+
+    def invalid_phone(form, field):
+        if len(field) > 16:
+            raise ValidationError('Invalid phone number.')
+        try:
+            input_number = phonenumbers.parse(field)
+            if not (phonenumbers.is_valid_number(input_number)):
+                raise ValidationError('Invalid phone number.')
+        except:
+            input_number = phonenumbers.parse("+1"+field)
+            if not (phonenumbers.is_valid_number(input_number)):
+                raise ValidationError('Invalid phone number.')
+
     name = StringField(
         'name', validators=[DataRequired()]
     )
@@ -83,13 +112,16 @@ class VenueForm(Form):
         'address', validators=[DataRequired()]
     )
     phone = StringField(
-        'phone'
+        'phone', validators=[DataRequired(),
+                            Length(min=10, max=10),
+                            Regexp('[0-9]{10}'),
+                            invalid_phone('VenueForm', 'phone')]
     )
     website = StringField(
         'website', validators=[URL()]
     )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[URL()]
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction: completed below.
@@ -125,6 +157,9 @@ class VenueForm(Form):
     seeking_talent_description = StringField(
         'seeking_description'
     )
+
+
+
 
 class ArtistForm(Form):
     name = StringField(
