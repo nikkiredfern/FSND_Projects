@@ -43,7 +43,7 @@ class Venue(db.Model):
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
-    genres = db.Column(db.String)
+    genres = db.Column(db.ARRAY(db.String))
     website = db.Column(db.String(500))
     facebook_link = db.Column(db.String(500))
     seeking_talent = db.Column(db.String)
@@ -77,8 +77,8 @@ class Show(db.Model):
     __tablename__ = 'Shows'
 
     id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=True)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
     start_time = db.Column(db.DateTime, nullable=True)
 
 #----------------------------------------------------------------------------#
@@ -168,7 +168,7 @@ def show_venue(venue_id):
     #'phone': venue.phone,
     #'website': venue.website,
     #'image_link': venue.image_link,
-    #'genres': venue.genres,
+    #'genres': genres,
     #'facebook_link': venue.facebook_link,
     #'seeking_venue': venue.seeking_talent,
     #'seeking_description': venue.seeking_talent_description
@@ -197,7 +197,7 @@ def create_venue_submission():
         address = request.form['address']
         phone = request.form['phone']
         image_link = request.form['image_link']
-        genres = request.form['genres']
+        genres = request.form.getlist('genres')
         facebook_link = request.form['facebook_link']
         if 'seeking_talent' not in request.form:
             seeking_talent = False
